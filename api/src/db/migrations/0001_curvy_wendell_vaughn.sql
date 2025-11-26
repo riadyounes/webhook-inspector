@@ -1,0 +1,1 @@
+ALTER TABLE "webhooks" RENAME COLUMN "path" TO "pathname";
