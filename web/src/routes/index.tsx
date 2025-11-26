@@ -19,8 +19,6 @@ function Index() {
     { key: 'Content Length', value: '1231 bytes' },
   ]
 
- 
-
   return (
     <div className="h-screen bg-zinc-900">
       <PanelGroup direction="horizontal">
@@ -48,7 +46,10 @@ function Index() {
                 </div>
                 <div className="space-y-4">
                   <SectionTitle>Request Body</SectionTitle>
-                  <CodeBlock code={JSON.stringify(overviewData, null, 2)} language="json" />
+                  <CodeBlock
+                    code={JSON.stringify(overviewData, null, 2)}
+                    language="json"
+                  />
                 </div>
               </div>
             </div>

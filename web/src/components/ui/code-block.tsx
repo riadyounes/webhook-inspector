@@ -16,7 +16,9 @@ export function CodeBlock({
   const [parsedCode, setParsedCode] = useState<string>(code)
 
   useEffect(() => {
-    codeToHtml(code, {lang: language, theme: 'vesper'}).then(parsed => setParsedCode(parsed))
+    codeToHtml(code, { lang: language, theme: 'vesper' }).then((parsed) =>
+      setParsedCode(parsed),
+    )
   }, [code, language])
 
   return (
@@ -28,8 +30,9 @@ export function CodeBlock({
       {...props}
     >
       <div
-       className='[&_pre]:p-4 [&_pre]:text-sm [&_pre]:leading-relaxed [&_pre]:font-mono'
-       dangerouslySetInnerHTML={{ __html: parsedCode }} />
+        className="[&_pre]:p-4 [&_pre]:text-sm [&_pre]:leading-relaxed [&_pre]:font-mono"
+        dangerouslySetInnerHTML={{ __html: parsedCode }}
+      />
     </div>
   )
 }
