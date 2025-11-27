@@ -263,9 +263,7 @@ async function seed() {
 
   // Mostrar as datas do primeiro e último webhook
   console.log('\n📅 Intervalo de datas:')
-  console.log(
-    `Mais antigo: ${webhooksData[0].createdAt.toISOString()}`,
-  )
+  console.log(`Mais antigo: ${webhooksData[0].createdAt.toISOString()}`)
   console.log(
     `Mais recente: ${webhooksData[webhooksData.length - 1].createdAt.toISOString()}`,
   )

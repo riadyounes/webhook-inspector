@@ -12,9 +12,15 @@ interface WebhooksListItemProps {
     pathname: string
     createdAt: Date
   }
+  onWebhookChecked: (webhookId: string) => void
+  isWebhookChecked: boolean
 }
 
-export function WebhooksListItem({ webhook }: WebhooksListItemProps) {
+export function WebhooksListItem({
+  webhook,
+  onWebhookChecked,
+  isWebhookChecked,
+}: WebhooksListItemProps) {
   const queryClient = useQueryClient()
 
   const { mutate: deleteWebhook, isPending } = useMutation({
@@ -31,7 +37,10 @@ export function WebhooksListItem({ webhook }: WebhooksListItemProps) {
   return (
     <div className="group rounded-lg transition-colors duration-150 hover:bg-zinc-700/30">
       <div className="flex items-start gap-3 px-4 py-2.5">
-        <Checkbox />
+        <Checkbox
+          onCheckedChange={() => onWebhookChecked(webhook.id)}
+          checked={isWebhookChecked}
+        />
         <Link
           to="/webhooks/$id"
           params={{ id: webhook.id }}
@@ -53,8 +62,10 @@ export function WebhooksListItem({ webhook }: WebhooksListItemProps) {
         </Link>
 
         <IconButton
-          icon={<Trash2Icon className="size-3.5 text-zinc-400" />}
-          className="opacity-0 group-hover:opacity-100"
+          icon={
+            <Trash2Icon className="size-3.5 text-zinc-400 group-hover/button:text-rose-400 transition-colors duration-150" />
+          }
+          className="opacity-0 group-hover:opacity-100 hover:cursor-pointer group/button"
           onClick={() => deleteWebhook(webhook.id)}
           disabled={isPending}
         />
