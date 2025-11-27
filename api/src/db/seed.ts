@@ -26,7 +26,7 @@ const STRIPE_EVENTS = [
   'checkout.session.completed',
 ]
 
-function generateStripeWebhook() {
+function generateStripeWebhook(createdAt: Date) {
   const eventType = faker.helpers.arrayElement(STRIPE_EVENTS)
   const method = 'POST'
   const pathname = '/webhooks/stripe'
@@ -37,10 +37,10 @@ function generateStripeWebhook() {
     id: `evt_${faker.string.alphanumeric(24)}`,
     object: 'event',
     api_version: '2023-10-16',
-    created: faker.date.recent({ days: 30 }).getTime() / 1000,
+    created: Math.floor(createdAt.getTime() / 1000),
     type: eventType,
     data: {
-      object: generateEventObject(eventType),
+      object: generateEventObject(eventType, createdAt),
     },
     livemode: faker.datatype.boolean(),
     pending_webhooks: faker.number.int({ min: 0, max: 3 }),
@@ -50,7 +50,7 @@ function generateStripeWebhook() {
     },
   }
 
-  const body = JSON.stringify(eventData)
+  const body = JSON.stringify(eventData, null, 2)
   const contentLength = Buffer.byteLength(body)
 
   return {
@@ -63,21 +63,21 @@ function generateStripeWebhook() {
     queryParams: null,
     headers: {
       'content-type': 'application/json',
-      'stripe-signature': `t=${Date.now()},v1=${faker.string.hexadecimal({ length: 64, prefix: '' })}`,
+      'stripe-signature': `t=${createdAt.getTime()},v1=${faker.string.hexadecimal({ length: 64, prefix: '' })}`,
       'user-agent': 'Stripe/1.0 (+https://stripe.com/docs/webhooks)',
       accept: '*/*',
       host: faker.internet.domainName(),
     },
     body,
-    createdAt: faker.date.recent({ days: 30 }),
+    createdAt,
   }
 }
 
-function generateEventObject(eventType: string) {
+function generateEventObject(eventType: string, createdAt: Date) {
   const baseObject = {
     id: faker.string.alphanumeric(24),
     object: '',
-    created: faker.date.recent({ days: 30 }).getTime() / 1000,
+    created: Math.floor(createdAt.getTime() / 1000),
   }
 
   if (eventType.startsWith('payment_intent')) {
@@ -174,8 +174,9 @@ function generateEventObject(eventType: string) {
         'past_due',
         'trialing',
       ]),
-      current_period_start: faker.date.recent({ days: 30 }).getTime() / 1000,
-      current_period_end: faker.date.future({ years: 1 }).getTime() / 1000,
+      current_period_start: Math.floor(createdAt.getTime() / 1000),
+      current_period_end:
+        Math.floor(createdAt.getTime() / 1000) + 365 * 24 * 60 * 60,
       plan: {
         id: `plan_${faker.string.alphanumeric(14)}`,
         amount: faker.number.int({ min: 999, max: 9999 }),
@@ -223,8 +224,24 @@ async function seed() {
   await db.delete(webhooks)
   console.log('🗑️  Tabela limpa')
 
-  // Gerar 60 webhooks
-  const webhooksData = Array.from({ length: 60 }, () => generateStripeWebhook())
+  // Gerar 60 webhooks em ordem decrescente de data
+  // O primeiro webhook terá a data mais antiga (30 dias atrás)
+  // O último webhook terá a data mais recente (agora)
+  const totalWebhooks = 60
+  const daysRange = 30
+  const now = new Date()
+  const oldestDate = new Date(now.getTime() - daysRange * 24 * 60 * 60 * 1000)
+
+  const webhooksData = Array.from({ length: totalWebhooks }, (_, index) => {
+    // Calcula a data proporcional ao índice
+    // index 0 = data mais antiga, index 59 = data mais recente
+    const progress = index / (totalWebhooks - 1)
+    const timestamp =
+      oldestDate.getTime() + progress * (now.getTime() - oldestDate.getTime())
+    const createdAt = new Date(timestamp)
+
+    return generateStripeWebhook(createdAt)
+  })
 
   // Inserir em batch
   await db.insert(webhooks).values(webhooksData)
@@ -243,6 +260,15 @@ async function seed() {
   )
 
   console.table(eventTypes)
+
+  // Mostrar as datas do primeiro e último webhook
+  console.log('\n📅 Intervalo de datas:')
+  console.log(
+    `Mais antigo: ${webhooksData[0].createdAt.toISOString()}`,
+  )
+  console.log(
+    `Mais recente: ${webhooksData[webhooksData.length - 1].createdAt.toISOString()}`,
+  )
 
   process.exit(0)
 }
