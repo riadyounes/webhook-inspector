@@ -1,10 +1,10 @@
 import { db } from '@/db'
 import { webhooks } from '@/db/schema'
-import { eq, inArray } from 'drizzle-orm'
+import { google } from '@ai-sdk/google'
+import { generateText } from 'ai'
+import { inArray } from 'drizzle-orm'
 import type { FastifyPluginAsyncZod } from 'fastify-type-provider-zod'
 import { z } from 'zod'
-import { generateText } from 'ai'
-import { google } from '@ai-sdk/google'
 
 export const generateHandler: FastifyPluginAsyncZod = async (app) => {
   app.post(
